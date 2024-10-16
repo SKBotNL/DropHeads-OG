@@ -38,11 +38,9 @@ public final class TextureKeyLookup{
 		int pccInt = EntityUtils.getPCCInt(fish);
 		Integer id = EntityUtils.getCommonTropicalFishId(pccInt);
 		if(id != null){
-//			System.out.println("name: "+EntityUtils.getTropicalFishEnglishName(ccp).toUpperCase().replace(' ', '_'));
 			return "TROPICAL_FISH|"+EntityUtils.getTropicalFishEnglishName(pccInt).toUpperCase().replace(' ', '_');
 		}
 		else{
-//			System.out.println("fallback name: "+new StringBuilder("TROPICAL_FISH|")
 //					.append(fish.getBodyColor().name()).append('|').append(fish.getPatternColor().name())
 //					.append('|').append(fish.getPattern().name()).toString());
 			return new StringBuilder("TROPICAL_FISH|")
