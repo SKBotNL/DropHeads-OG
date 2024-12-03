@@ -1,4 +1,4 @@
-rootProject.name = "DropHeads"
+rootProject.name = "DropHeads-OG"
 
 // Execute bootstrap.sh
 exec {
