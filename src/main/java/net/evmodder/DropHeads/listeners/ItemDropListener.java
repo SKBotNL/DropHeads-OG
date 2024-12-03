@@ -1,19 +1,16 @@
 package net.evmodder.DropHeads.listeners;
 
-import java.util.List;
-import org.bukkit.ChatColor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
+
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.DropHeads.JunkUtils;
-import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.TellrawUtils;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
+import net.kyori.adventure.text.TextComponent;
+import plugin.extras.HeadUtils;
+import plugin.util.PlayerProfile;
 
 public class ItemDropListener implements Listener{
 	private final DropHeads pl;
@@ -32,22 +29,8 @@ public class ItemDropListener implements Listener{
 	private boolean hasCustomLore(ItemMeta meta){
 		if(!meta.hasLore()) return false;
 		if(!SAVE_TYPE_IN_LORE) return true;
-		if(meta.getLore().size() == 1 && ChatColor.stripColor(meta.getLore().get(0)).matches("\\w+:\\w+")) return false;
+		if(meta.lore().size() == 1 && DropHeads.stripColor((TextComponent) meta.lore().get(0)).matches("\\w+:\\w+")) return false;
 		return true;
-	}
-
-	private boolean hasCustomName(ItemMeta meta, GameProfile profile){
-		if(!meta.hasDisplayName()) return false;
-		if(profile.getName() == null) return true; // why return true?
-
-		String textureKey = pl.getAPI().getTextureKey(profile);
-		final String customName;
-		if(textureKey == null){textureKey = "PLAYER"; customName = profile.getName();}
-		else customName = "";//todo?
-
-		final String expectedName = ChatColor.stripColor(pl.getInternalAPI().getFullHeadNameFromKey(textureKey, customName).toPlainText());
-		final String actualName = ChatColor.stripColor(meta.getDisplayName());
-		return !expectedName.equals(actualName);
 	}
 
 	@EventHandler(ignoreCancelled = true)
@@ -57,43 +40,20 @@ public class ItemDropListener implements Listener{
 
 		ItemStack originalItem = evt.getEntity().getItemStack();
 		final SkullMeta originalMeta = (SkullMeta) originalItem.getItemMeta();
-		final GameProfile originalProfile = HeadUtils.getGameProfile(originalMeta);
+		final PlayerProfile originalProfile = HeadUtils.getGameProfile(originalMeta);
 		if(originalProfile == null) return;
 		final ItemStack refreshedItem = pl.getAPI().getHead(originalProfile); // Gets a refreshed texture by textureKey (profile name)
 		if(refreshedItem == null) return;
 		//if(FORCE_TEXTURE_UPDATE){
-			final GameProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
-			HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This refreshes the texture
+		final PlayerProfile refreshedProfile = HeadUtils.getGameProfile((SkullMeta)refreshedItem.getItemMeta());
+		HeadUtils.setGameProfile(originalMeta, refreshedProfile); // This refreshes the texture
 		//}
 		if(TYPE_UPDATE && originalItem.getType() != refreshedItem.getType()) originalItem.setType(refreshedItem.getType());
 
-//		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalMeta.setDisplayName(refreshedItem.getItemMeta().getDisplayName());
-//		if(!hasCustomLore(originalMeta) || FORCE_LORE_UPDATE) originalMeta.setLore(refreshedItem.getItemMeta().getLore());
+		if(!originalMeta.hasDisplayName() || FORCE_NAME_UPDATE) originalMeta.displayName(refreshedItem.getItemMeta().displayName());
+		if(!hasCustomLore(originalMeta) || FORCE_LORE_UPDATE) originalMeta.lore(refreshedItem.getItemMeta().lore());
 		originalItem.setItemMeta(originalMeta);
-
-		if(!hasCustomName(originalMeta, originalProfile) || FORCE_NAME_UPDATE){
-			if(refreshedItem.getItemMeta().hasDisplayName()){
-				originalItem = JunkUtils.setDisplayName(originalItem, TellrawUtils.parseComponentFromString(JunkUtils.getDisplayName(refreshedItem)));
-			}
-			else{
-				final ItemMeta meta = originalItem.getItemMeta();
-				meta.setDisplayName(null);
-				originalItem.setItemMeta(meta);
-			}
-		}
-		if(!hasCustomLore(originalMeta) || FORCE_LORE_UPDATE){
-			if(refreshedItem.getItemMeta().hasLore()){
-				final List<String> lores = JunkUtils.getLore(refreshedItem);
-				final Component[] loreComps = new Component[lores.size()];
-				for(int i=0; i<lores.size(); ++i) loreComps[i] = TellrawUtils.parseComponentFromString(lores.get(i));
-				originalItem = JunkUtils.setLore(originalItem, loreComps);
-			}
-			else{
-				final ItemMeta meta = originalItem.getItemMeta();
-				meta.setLore(null);
-				originalItem.setItemMeta(meta);
-			}
-		}
 		evt.getEntity().setItemStack(originalItem);
 	}
+
 }

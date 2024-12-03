@@ -1,13 +1,14 @@
-name: DropHeads
+name: DropHeads-OG
 main: net.evmodder.DropHeads.DropHeads
-author: EvModder
+authors: [NotAlexNoyle, EvModder]
 description: Heads for every mob and player.
-website: https://dev.bukkit.org/projects/dropheads
+website: https://github.com/true-og/DropHeads-OG
 #3=major rewrite
 #9=Reorganized texture file downloads, global click-info cooldown
 #4=support for 1.20.5,1.20.6, rewrite of profile & lore storage system
 version: 3.9.4
-api-version: 1.13
+api-version: 1.19
+depend: [ProtocolLib]
 softdepend: [HeadDatabase, Essentials, VanishNoPacket]
 
 # Hidden config.yml settings:

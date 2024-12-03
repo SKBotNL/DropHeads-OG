@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.util.HashSet;
+
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -9,15 +10,16 @@ import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
+
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.EvLib.extras.HeadUtils;
+import plugin.extras.HeadUtils;
+import plugin.util.PlayerProfile;
 
 public class EndermanProvokeListener implements Listener{
 	private final DropHeads pl;
 	private final HashSet<EntityType> camouflageHeads;
 	private final boolean ALL_HEADS_ARE_CAMOFLAGE;
-	
+
 	public EndermanProvokeListener(){
 		pl = DropHeads.getPlugin();
 		camouflageHeads = new HashSet<EntityType>();
@@ -34,7 +36,7 @@ public class EndermanProvokeListener implements Listener{
 	private EntityType getEntityTypeFromHead(ItemStack head){
 		if(head == null || !HeadUtils.isHead(head.getType())) return null;
 		if(!HeadUtils.isPlayerHead(head.getType())) return HeadUtils.getEntityFromHead(head.getType());
-		final GameProfile profile = HeadUtils.getGameProfile((SkullMeta)head.getItemMeta());
+		final PlayerProfile profile = HeadUtils.getGameProfile((SkullMeta)head.getItemMeta());
 		if(profile != null){
 			final String textureKey = pl.getAPI().getTextureKey(profile);
 			final int idx = textureKey.indexOf('|');
@@ -46,12 +48,12 @@ public class EndermanProvokeListener implements Listener{
 
 	@EventHandler public void entityTargetEntityEvent(EntityTargetLivingEntityEvent evt){
 		if(evt.getEntityType() == EntityType.ENDERMAN && evt.getTarget() != null && evt.getTarget().getType() == EntityType.PLAYER
-			&& evt.getReason() == TargetReason.CLOSEST_PLAYER
-			&& (evt.getEntity().getLastDamageCause() == null
+				&& evt.getReason() == TargetReason.CLOSEST_PLAYER
+				&& (evt.getEntity().getLastDamageCause() == null
 				|| !(evt.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent
-				|| !((EntityDamageByEntityEvent)evt.getEntity().getLastDamageCause()).getDamager().getUniqueId().equals(evt.getTarget().getUniqueId()))
-			) && (ALL_HEADS_ARE_CAMOFLAGE || camouflageHeads.contains(getEntityTypeFromHead(evt.getTarget().getEquipment().getHelmet())))
-		){
+						|| !((EntityDamageByEntityEvent)evt.getEntity().getLastDamageCause()).getDamager().getUniqueId().equals(evt.getTarget().getUniqueId()))
+						) && (ALL_HEADS_ARE_CAMOFLAGE || camouflageHeads.contains(getEntityTypeFromHead(evt.getTarget().getEquipment().getHelmet())))
+				){
 			evt.setCancelled(true);
 		}
 	}

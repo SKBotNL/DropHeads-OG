@@ -9,9 +9,10 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.ItemStack;
-import com.mojang.authlib.GameProfile;
+
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.EvLib.extras.HeadUtils;
+import plugin.extras.HeadUtils;
+import plugin.util.PlayerProfile;
 
 public class CreativeMiddleClickListener implements Listener{
 	// This listener is only registered when 'fix-creative-nbt-copy' = true
@@ -29,7 +30,7 @@ public class CreativeMiddleClickListener implements Listener{
 					evt.setCursor(itemWithAddedLore);
 				}
 				else{
-					final GameProfile profile = HeadUtils.getGameProfile((Skull)headBlock.getState());
+					final PlayerProfile profile = HeadUtils.getGameProfile((Skull)headBlock.getState());
 					final ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profile);
 					if(headItem != null) evt.setCursor(headItem);
 				}

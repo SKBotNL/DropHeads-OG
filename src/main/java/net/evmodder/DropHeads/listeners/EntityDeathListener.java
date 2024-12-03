@@ -7,7 +7,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+
 import javax.annotation.Nonnull;
+
 import org.bukkit.Material;
 import org.bukkit.Nameable;
 import org.bukkit.command.CommandSender;
@@ -32,13 +34,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.plugin.EventExecutor;
 import org.bukkit.scheduler.BukkitRunnable;
+
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
 import net.evmodder.DropHeads.events.HeadRollEvent;
-import net.evmodder.EvLib.EvUtils;
-import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.TextUtils;
+import plugin.EvUtils;
+import plugin.extras.HeadUtils;
+import plugin.extras.TextUtils;
 
 public class EntityDeathListener implements Listener{
 	private final DropHeads pl;
@@ -100,19 +103,19 @@ public class EntityDeathListener implements Listener{
 
 	private ItemStack getWeaponFromKiller(Entity killer){
 		return killer != null ?
-					killer instanceof LivingEntity ?
+				killer instanceof LivingEntity ?
 						((LivingEntity)killer).getEquipment().getItemInMainHand() :
-						killer instanceof Projectile ?
-							USE_RANGED_WEAPON_FOR_LOOTING ?
-								killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() : null
-								: ((Projectile)killer).getShooter() instanceof LivingEntity ?
-									((LivingEntity)((Projectile)killer).getShooter()).getEquipment().getItemInMainHand() : null
-						: null
-				: null;
+							killer instanceof Projectile ?
+									USE_RANGED_WEAPON_FOR_LOOTING ?
+											killer.hasMetadata("ShotUsing") ? (ItemStack)killer.getMetadata("ShotUsing").get(0).value() : null
+													: ((Projectile)killer).getShooter() instanceof LivingEntity ?
+															((LivingEntity)((Projectile)killer).getShooter()).getEquipment().getItemInMainHand() : null
+															: null
+															: null;
 	}
 
 	private String getName(Permissible killer){
-		if(killer instanceof Nameable && ((Nameable)killer).getCustomName() != null) return ((Nameable)killer).getCustomName();
+		if(killer instanceof Nameable && ((Nameable)killer).customName() != null) return (((Nameable)killer).customName().examinableName());
 		if(killer instanceof CommandSender) return ((CommandSender)killer).getName();
 		return killer.getClass().getSimpleName();
 	}
@@ -158,16 +161,16 @@ public class EntityDeathListener implements Listener{
 		if((!ALLOW_INDIRECT_KILLS && killer == null
 				// Note: Won't use timeSinceLastEntityDamage()... it would be expensive to keep track of
 				&& JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS) ||
-			(!ALLOW_PROJECTILE_KILLS && killer != null && killer instanceof Projectile) ||
-			(!ALLOW_NON_PLAYER_KILLS && (killer != null ? (
-				killer instanceof Player == false &&
-				(
-					!ALLOW_PROJECTILE_KILLS ||
-					killer instanceof Projectile == false ||
-					((Projectile)killer).getShooter() instanceof Player == false
-				)
-			) : JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS))
-		) return false;
+				(!ALLOW_PROJECTILE_KILLS && killer != null && killer instanceof Projectile) ||
+				(!ALLOW_NON_PLAYER_KILLS && (killer != null ? (
+						killer instanceof Player == false &&
+						(
+								!ALLOW_PROJECTILE_KILLS ||
+								killer instanceof Projectile == false ||
+								((Projectile)killer).getShooter() instanceof Player == false
+								)
+						) : JunkUtils.timeSinceLastPlayerDamage(victim) > INDIRECT_KILL_THRESHOLD_MILLIS))
+				) return false;
 
 		final ItemStack murderWeapon = getWeaponFromKiller(killer);
 		final Material murdetWeaponType = murderWeapon == null ? Material.AIR : murderWeapon.getType();
@@ -197,15 +200,15 @@ public class EntityDeathListener implements Listener{
 				if(DEBUG_MODE){
 					DecimalFormat df = new DecimalFormat("0.0###");
 					pl.getLogger().info("Dropping Head: "+TextureKeyLookup.getTextureKey(victim)
-						+"\nKiller: "+(killer != null ? killer.getType() : "none")
-						+", Weapon: "+murdetWeaponType
-						+"\nRaw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
-						(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
-						(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
-						(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
-						(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
-						(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
-						"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
+					+"\nKiller: "+(killer != null ? killer.getType() : "none")
+					+", Weapon: "+murdetWeaponType
+					+"\nRaw chance: "+df.format(rawDropChance*100D)+"%\nMultipliers >> "+
+					(spawnCauseMod != 1 ? "SpawnReason: "+df.format((spawnCauseMod-1D)*100D)+"%, " : "") +
+					(timeAliveMod != 1 ? "TimeAlive: "+df.format((timeAliveMod-1D)*100D)+"%, " : "") +
+					(weaponMod != 1 ? "Weapon: "+df.format((weaponMod-1D)*100D)+"%, " : "") +
+					(lootingMod != 1 ? "Looting: "+df.format((lootingMod-1D)*100D)+"%, " : "") +
+					(lootingAdd != 0 ? "Looting (Addition): "+df.format(lootingAdd*100D)+"%, " : "") +
+					"\nFinal drop chance: "+df.format(dropChance*100D)+"%");
 				}
 				return true;
 			}
@@ -241,7 +244,7 @@ public class EntityDeathListener implements Listener{
 			if(i != null && i.getType() == Material.AIR && newSkullsDropped > 1){
 				evt.getDrops().add(removedSkulls.isEmpty()
 						? new ItemStack(Material.WITHER_SKELETON_SKULL)
-						: removedSkulls.remove(removedSkulls.size()-1));
+								: removedSkulls.remove(removedSkulls.size()-1));
 				--newSkullsDropped;
 			}
 		}
@@ -252,7 +255,7 @@ public class EntityDeathListener implements Listener{
 					&& victim.hasPermission("dropheads.canlosehead") && (killer == null || killer.hasPermission("dropheads.canbehead.wither_skeleton"))){
 				// Don't drop the skull if another skull drop has already been caused by the same charged creeper.
 				if(killer != null && killer instanceof Creeper && ((Creeper)killer).isPowered() && CHARGED_CREEPER_DROPS &&
-					!explodingChargedCreepers.add(killer.getUniqueId()))
+						!explodingChargedCreepers.add(killer.getUniqueId()))
 				{
 					return true;
 				}
@@ -270,7 +273,7 @@ public class EntityDeathListener implements Listener{
 				final LivingEntity victim = evt.getEntity();
 				final Entity killer = victim.getLastDamageCause() != null && victim.getLastDamageCause() instanceof EntityDamageByEntityEvent
 						? ((EntityDamageByEntityEvent)victim.getLastDamageCause()).getDamager()
-						: null;
+								: null;
 
 				if(victim.getType() == EntityType.WITHER_SKELETON && handleWitherSkeltonDeathEvent(victim, killer, evt)){
 					return;

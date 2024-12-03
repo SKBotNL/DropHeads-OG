@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.util.HashMap;
+
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
@@ -10,10 +11,11 @@ import org.bukkit.block.Skull;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.NotePlayEvent;
-import com.mojang.authlib.GameProfile;
+
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
-import net.evmodder.EvLib.extras.HeadUtils;
+import plugin.extras.HeadUtils;
+import plugin.util.PlayerProfile;
 
 public class NoteblockPlayListener implements Listener{
 	private final HashMap<String, Sound> nbSounds;
@@ -89,14 +91,14 @@ public class NoteblockPlayListener implements Listener{
 	@EventHandler(ignoreCancelled = true)
 	public void onNoteblockPlay(NotePlayEvent evt){
 		final Block nb = evt.getBlock();
-//		if(nb.getY() >= nb.getWorld().getMaxHeight() || nb.getRelative(BlockFace.UP).getType() != Material.PLAYER_HEAD) return;
+		//		if(nb.getY() >= nb.getWorld().getMaxHeight() || nb.getRelative(BlockFace.UP).getType() != Material.PLAYER_HEAD) return;
 		if(nb.getY() >= nb.getWorld().getMaxHeight() || !HeadUtils.isHead(nb.getRelative(BlockFace.UP).getType())) return;
 		final Skull skull = (Skull) nb.getRelative(BlockFace.UP).getState();
 		if(skull.getType().name().endsWith("_WALL_HEAD")) return;
 
 		String textureKey;
 		if(skull.getType() == Material.PLAYER_HEAD){
-			final GameProfile profile = HeadUtils.getGameProfile(skull);
+			final PlayerProfile profile = HeadUtils.getGameProfile(skull);
 			textureKey = DropHeads.getPlugin().getAPI().getTextureKey(profile);
 			if(textureKey == null) return;
 		}

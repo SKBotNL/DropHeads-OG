@@ -5,7 +5,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
+
+import plugin.extras.TellrawUtils.Component;
 
 /** Cancellable event created by the DropHeads plugin when a behead message is sent.
  */
@@ -51,7 +52,7 @@ public class BeheadMessageEvent extends Event implements Cancellable{
 	 * @return the Entity object representing the victim
 	 */
 	public Entity getVictim(){return victim;}
-	
+
 	/** Get the entity that did the beheading.
 	 * @return the Entity for the killer, or <code>null</code> if no entity was responsible
 	 */

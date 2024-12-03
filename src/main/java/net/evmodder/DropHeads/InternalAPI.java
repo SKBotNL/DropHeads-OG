@@ -1,19 +1,23 @@
 package net.evmodder.DropHeads;
 
 import java.util.ArrayList;
+
 import javax.annotation.Nonnull;
+
 import org.bukkit.inventory.ItemStack;
+
 import me.arcaniax.hdb.api.HeadDatabaseAPI;
-import net.evmodder.EvLib.extras.TextUtils;
 import net.evmodder.DropHeads.JunkUtils.NoteblockMode;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
-import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
+import net.kyori.adventure.text.TextComponent;
+import plugin.extras.TellrawUtils.Component;
+import plugin.extras.TellrawUtils.TranslationComponent;
+import plugin.extras.TextUtils;
 
 /** Internal-only API for DropHeads.
  * WARNING: Functions here are highly subject to change and should not be used by other plugins
  */
 public final class InternalAPI extends HeadAPI{
-	InternalAPI(NoteblockMode m){super(m);}
+	InternalAPI(NoteblockMode m, boolean crackedIronGolemHeads){super(m, crackedIronGolemHeads);}
 
 	// Loads config.getString(key), replacing '${abc-xyz}' with config.getString('abc-xyz')
 	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
@@ -29,7 +33,7 @@ public final class InternalAPI extends HeadAPI{
 	 */
 	public String loadTranslationStr(String key, String defaultValue){
 		if(!translationsFile.isString(key)) DropHeads.getPlugin().getLogger().severe("Undefined key in 'translations.yml': "+key);
-		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
+		final String msg = ((TextComponent) TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue))).content();
 		int i = msg.indexOf('$');
 		if(i == -1) return msg;
 		StringBuilder builder = new StringBuilder();
@@ -67,9 +71,9 @@ public final class InternalAPI extends HeadAPI{
 	 * @return the parsed value at that path, or the parsed value of <code>defaultValue</code> if not found
 	 */
 	public TranslationComponent loadTranslationComp(String key, String defaultValue){
-//		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
-		final String msg = TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue));
-		int i = msg.indexOf('$');
+		//		if(!translationsFile.isString(key)) pl.getLogger().severe("Undefined key in 'translations.yml': "+key);
+		final String msg = ((TextComponent) TextUtils.translateAlternateColorCodes('&', translationsFile.getString(key, defaultValue))).content();
+		int i = msg.indexOf('$');//${sub}
 		if(i == -1){
 			return new TranslationComponent(msg);
 		}
@@ -116,6 +120,7 @@ public final class InternalAPI extends HeadAPI{
 		return id != null && hdbAPI.isHead(id);
 	}
 
+	// Called by BlockClickListener and ItemDropListener
 	/** <strong>DO NOT USE:</strong> This function will likely disappear in a future release
 	 * @param textureKey the key (from <a href="https://github.com/EvModder/DropHeads/blob/master/head-textures.txt">head-textures.txt"</a>)
 	 * @param customName the custom name of the entity, usually null for non-players

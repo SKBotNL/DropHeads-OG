@@ -1,5 +1,7 @@
 package net.evmodder.DropHeads;
 
+import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,6 +11,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.annotation.Nonnull;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.block.BlockFace;
@@ -22,31 +27,32 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.util.Vector;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
-import javax.annotation.Nonnull;
-import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.extras.NBTTagUtils;
-import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagString;
-import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagCompound;
-import net.evmodder.EvLib.extras.NBTTagUtils.RefNBTTagList;
-import net.evmodder.EvLib.extras.ReflectionUtils;
-import net.evmodder.EvLib.extras.TellrawUtils;
-import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.WebUtils;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefClass;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefField;
-import net.evmodder.EvLib.extras.ReflectionUtils.RefMethod;
-import net.evmodder.EvLib.extras.TellrawUtils.ClickEvent;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
-import net.evmodder.EvLib.extras.TellrawUtils.Format;
-import net.evmodder.EvLib.extras.TellrawUtils.HoverEvent;
-import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.TextClickAction;
-import net.evmodder.EvLib.extras.TellrawUtils.TextHoverAction;
+
+import plugin.FileIO;
+import plugin.extras.NBTTagUtils;
+import plugin.extras.NBTTagUtils.RefNBTTagCompound;
+import plugin.extras.NBTTagUtils.RefNBTTagList;
+import plugin.extras.NBTTagUtils.RefNBTTagString;
+import plugin.extras.ReflectionUtils;
+import plugin.extras.ReflectionUtils.RefClass;
+import plugin.extras.ReflectionUtils.RefField;
+import plugin.extras.ReflectionUtils.RefMethod;
+import plugin.extras.TellrawUtils;
+import plugin.extras.TellrawUtils.ClickEvent;
+import plugin.extras.TellrawUtils.Component;
+import plugin.extras.TellrawUtils.Format;
+import plugin.extras.TellrawUtils.HoverEvent;
+import plugin.extras.TellrawUtils.ListComponent;
+import plugin.extras.TellrawUtils.RawTextComponent;
+import plugin.extras.TellrawUtils.SelectorComponent;
+import plugin.extras.TellrawUtils.TextClickAction;
+import plugin.extras.TellrawUtils.TextHoverAction;
+import plugin.extras.TextUtils;
+import plugin.extras.WebUtils;
+import plugin.util.PlayerProfile;
+import plugin.util.Property;
 
 // A trashy place to dump stuff that I should probably move to EvLib after ensure cross-version safety
 public final class JunkUtils{
@@ -65,6 +71,17 @@ public final class JunkUtils{
 			DropHeads.getPlugin().getLogger().warning("Please use one of: "+String.join(", ",
 					Arrays.asList(enumClass.getEnumConstants()).stream().map(v -> v.name()).collect(Collectors.toList())));
 			return defaultValue;
+		}
+	}
+
+	public final static long getJarCreationTime(Plugin pl){
+		try{
+			java.lang.reflect.Method getFileMethod = JavaPlugin.class.getDeclaredMethod("getFile");
+			getFileMethod.setAccessible(true);
+			return ((File)getFileMethod.invoke(pl)).lastModified();
+		}
+		catch(NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException | InvocationTargetException e1){
+			return 0;
 		}
 	}
 
@@ -253,14 +270,14 @@ public final class JunkUtils{
 	}
 
 	public final static Component getItemDisplayNameComponent(@Nonnull ItemStack item){
-		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
+		String rarityColor = TextUtils.getRarityColor(item).toLowerCase();
 		String rawDisplayName = JunkUtils.getDisplayName(item);
 		if(rawDisplayName != null){
 			return new ListComponent(
 					new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, /*hover=*/null,
 							/*color=*/rarityColor, /*formats=*/Collections.singletonMap(Format.ITALIC, true)),
 					TellrawUtils.parseComponentFromString(rawDisplayName)
-			);
+					);
 		}
 		else{
 			return new ListComponent(
@@ -270,7 +287,7 @@ public final class JunkUtils{
 	}
 	public final static Component getMurderItemComponent(@Nonnull ItemStack item, int JSON_LIMIT){
 		TextHoverAction hoverAction = new TextHoverAction(HoverEvent.SHOW_ITEM, JunkUtils.convertItemStackToJson(item, JSON_LIMIT));
-		String rarityColor = TextUtils.getRarityColor(item).name().toLowerCase();
+		String rarityColor = TextUtils.getRarityColor(item).toLowerCase();
 		String rawDisplayName = JunkUtils.getDisplayName(item);
 		if(rawDisplayName != null){
 			return new ListComponent(
@@ -279,7 +296,7 @@ public final class JunkUtils{
 							new RawTextComponent(/*text=*/"", /*insert=*/null, /*click=*/null, null,
 									/*color=*/null, /*formats=*/Collections.singletonMap(Format.ITALIC, true)),
 							TellrawUtils.parseComponentFromString(rawDisplayName)
-					),
+							),
 					new RawTextComponent(/*text=*/"]"));
 		}
 		else{
@@ -291,65 +308,65 @@ public final class JunkUtils{
 	}
 
 	public final static Component getDisplayNameSelectorComponent(Entity entity){
-		if(entity instanceof Player && !((Player)entity).getDisplayName().equals(entity.getName())){
+		if(entity instanceof Player && !((Player)entity).displayName().examinableName().equals(entity.getName())){
 			final String selectorHoverText = entity.getName()+"\nType: Player\n"+entity.getUniqueId();
 			final String selectorClickSuggestText = "/tell "+entity.getName()+" ";
 			return new ListComponent(
 					new RawTextComponent(
-						/*text=*/"", /*insert=*/null,
-						new TextClickAction(ClickEvent.SUGGEST_COMMAND, selectorClickSuggestText),
-						new TextHoverAction(HoverEvent.SHOW_TEXT, selectorHoverText),
-						/*color=*/null, /*formats=*/null
-					),
-					TellrawUtils.convertHexColorsToComponentsWithReset(((Player)entity).getDisplayName())
-			);
+							/*text=*/"", /*insert=*/null,
+							new TextClickAction(ClickEvent.SUGGEST_COMMAND, selectorClickSuggestText),
+							new TextHoverAction(HoverEvent.SHOW_TEXT, selectorHoverText),
+							/*color=*/null, /*formats=*/null
+							),
+					TellrawUtils.convertHexColorsToComponentsWithReset(((Player)entity).displayName().examinableName())
+					);
 		}
 		else{
 			return new SelectorComponent(entity.getUniqueId());
 		}
 	}
 
-// not currently used
-//	// Similar as above, but for Entity instead of ItemStack
-//	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
-//	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
-//	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
-//	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
-//	public final static String convertEntityToJson(Entity entity){
-//		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
-//		Object nmsEntityObj = entityGetHandleMethod.of(entity).call();
-//		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
-//		return entityAsJsonObject.toString();
-//	}
+	// not currently used
+	//	// Similar as above, but for Entity instead of ItemStack
+	//	final static RefClass craftEntityClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftEntity");
+	//	final static RefMethod entityGetHandleMethod = craftEntityClazz.getMethod("getHandle");
+	//	final static RefClass nmsEntityClazz = ReflectionUtils.getRefClass("{nms}.Entity", "{nm}.world.entity.Entity");
+	//	final static RefMethod saveNmsEntityMethod = nmsEntityClazz.findMethod(/*isStatic=*/false, nbtTagCompoundClazz, nbtTagCompoundClazz);
+	//	public final static String convertEntityToJson(Entity entity){
+	//		Object nmsNbtTagCompoundObj = nbtTagCompoundClazz.getConstructor().create();
+	//		Object nmsEntityObj = entityGetHandleMethod.of(entity).call();
+	//		Object entityAsJsonObject = saveNmsEntityMethod.of(nmsEntityObj).call(nmsNbtTagCompoundObj);
+	//		return entityAsJsonObject.toString();
+	//	}
 
 	public final static boolean setIfEmpty(@Nonnull EntityEquipment equipment, @Nonnull ItemStack item, @Nonnull EquipmentSlot slot){
 		switch(slot){
-			case HAND:
-				if(equipment.getItemInMainHandDropChance() >= 1f && equipment.getItemInMainHand() != null) return false;
-				equipment.setItemInMainHand(item);
-				return true;
-			case OFF_HAND:
-				if(equipment.getItemInOffHandDropChance() >= 1f && equipment.getItemInOffHand() != null) return false;
-				equipment.setItemInOffHand(item);
-				return true;
-			case HEAD:
-				if(equipment.getHelmetDropChance() >= 1f && equipment.getHelmet() != null) return false;
-				equipment.setHelmet(item);
-				return true;
-			case CHEST:
-				if(equipment.getChestplateDropChance() >= 1f && equipment.getChestplate() != null) return false;
-				equipment.setChestplate(item);
-				return true;
-			case LEGS:
-				if(equipment.getLeggingsDropChance() >= 1f && equipment.getLeggings() != null) return false;
-				equipment.setLeggings(item);
-				return true;
-			case FEET:
-				if(equipment.getBootsDropChance() >= 1f && equipment.getBoots() != null) return false;
-				equipment.setBoots(item);
-				return true;
-			default:
-				return false;
+		case HAND:
+			if(equipment.getItemInMainHandDropChance() >= 1f && equipment.getItemInMainHand() != null) return false;
+			equipment.setItemInMainHand(item);
+			return true;
+		case OFF_HAND:
+			if(equipment.getItemInOffHandDropChance() >= 1f && equipment.getItemInOffHand() != null) return false;
+			equipment.setItemInOffHand(item);
+			return true;
+		case HEAD:
+			if(equipment.getHelmetDropChance() >= 1f && equipment.getHelmet() != null) return false;
+			equipment.setHelmet(item);
+			return true;
+		case CHEST:
+			if(equipment.getChestplateDropChance() >= 1f && equipment.getChestplate() != null) return false;
+			equipment.setChestplate(item);
+			return true;
+		case LEGS:
+			if(equipment.getLeggingsDropChance() >= 1f && equipment.getLeggings() != null) return false;
+			equipment.setLeggings(item);
+			return true;
+		case FEET:
+			if(equipment.getBootsDropChance() >= 1f && equipment.getBoots() != null) return false;
+			equipment.setBoots(item);
+			return true;
+		default:
+			return false;
 		}
 	}
 
@@ -373,7 +390,7 @@ public final class JunkUtils{
 			return (boolean)vanishMethodIsVanished.of(vanishMethodGetManager.of(vanishPlugin).call()).call(p);
 		}
 		return p.getServer().getOnlinePlayers().stream().allMatch(p2 -> !p2.canSee(p) || p2.isOp() || p2.getUniqueId().equals(p.getUniqueId()))
-			&& p.getServer().getOnlinePlayers().stream().anyMatch(p2 -> !p2.canSee(p));
+				&& p.getServer().getOnlinePlayers().stream().anyMatch(p2 -> !p2.canSee(p));
 	}
 
 	public final static ItemStack giveItemToEntity(Entity entity, ItemStack item){
@@ -404,63 +421,63 @@ public final class JunkUtils{
 
 	private final static RefClass craftPlayerClazz = ReflectionUtils.getRefClass("{cb}.entity.CraftPlayer");
 	private final static RefMethod playerGetProfileMethod = craftPlayerClazz.getMethod("getProfile");
-	private final static GameProfile getGameProfile(Player player){return (GameProfile)playerGetProfileMethod.of(player).call();}
+	private final static PlayerProfile getPlayerProfile(Player player){return (PlayerProfile)playerGetProfileMethod.of(player).call();}
 
 	private final static RefMethod propertyGetValueMethod = ReflectionUtils.getRefClass(Property.class).findMethodByName("getValue", "value");
 	public final static String getPropertyValue(Property p){return (String)propertyGetValueMethod.of(p).call();}
 
-	@SuppressWarnings("deprecation")
-	public final static GameProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
+	public final static PlayerProfile getGameProfile(String nameOrUUID, boolean fetchSkin, Plugin nullForSync){
 		Player player;
 		try{player = Bukkit.getServer().getPlayer(UUID.fromString(nameOrUUID));}
-		catch(java.lang.IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
+		catch(IllegalArgumentException e){player = null;/*thrown by UUID.fromString*/}
 		if(player == null) player = Bukkit.getServer().getPlayer(nameOrUUID);
 		if(player != null){
-			final GameProfile profile = new GameProfile(player.getUniqueId(), player.getName());
-			if(fetchSkin){
-				final GameProfile rawProfile = getGameProfile(player);
-				if(rawProfile.getProperties() != null && rawProfile.getProperties().containsKey("textures")){
-					final Collection<Property> textures = rawProfile.getProperties().get("textures");
-					if(textures != null && !textures.isEmpty()){
-						final String code0 = getPropertyValue(textures.iterator().next());
-						profile.getProperties().put("textures", new Property("textures", code0));
+			final PlayerProfile profile = new PlayerProfile(player.getUniqueId(), player.getName());
+			if (fetchSkin) {
+				final PlayerProfile rawProfile = getPlayerProfile(player);
+				if (rawProfile.getProperties() != null && rawProfile.getProperties().containsKey("textures")) {
+					final String textures = rawProfile.getProperties().get("textures");
+					final String signature = rawProfile.getProperties().get("signature"); // Retrieve the signature
+					if (textures != null && !textures.isEmpty() && signature != null && !signature.isEmpty()) {
+						profile.getProperties().put("textures", textures);
 					}
 				}
 			}
+
 			WebUtils.addGameProfileToCache(nameOrUUID, profile);
 			return profile;
 		}
-		return WebUtils.getGameProfile(nameOrUUID, fetchSkin, nullForSync);
+		return WebUtils.getPlayerProfile(nameOrUUID, fetchSkin, nullForSync);
 	}
 
-// not currently used
-//	// Called by HeadAPI for downloaded texture files
-//	final static String stripComments(String fileContent){ // Copied roughly from FileIO
-//		StringBuilder output = new StringBuilder();
-//		for(String line : fileContent.split("\n")){
-//			line = line.trim().replace("//", "#");
-//			final int cut = line.indexOf('#');
-//			if(cut == -1) output.append('\n').append(line);
-//			else if(cut > 0) output.append('\n').append(line.substring(0, cut).trim());
-//		}
-//		return output.length() == 0 ? "" : output.substring(1);
-//	}
+	// not currently used
+	//	// Called by HeadAPI for downloaded texture files
+	//	final static String stripComments(String fileContent){ // Copied roughly from FileIO
+	//		StringBuilder output = new StringBuilder();
+	//		for(String line : fileContent.split("\n")){
+	//			line = line.trim().replace("//", "#");
+	//			final int cut = line.indexOf('#');
+	//			if(cut == -1) output.append('\n').append(line);
+	//			else if(cut > 0) output.append('\n').append(line.substring(0, cut).trim());
+	//		}
+	//		return output.length() == 0 ? "" : output.substring(1);
+	//	}
 
-// not currently used
-//	public interface TestFunc{boolean test(int num);}
-//	public final static int binarySearch(TestFunc f, int a, int b){
-//		while(a < b-1){
-//			int x = (b + a)/2;
-//			if(f.test(x)) a = x;
-//			else b = x;
-//		}
-//		return a;
-//	}
+	// not currently used
+	//	public interface TestFunc{boolean test(int num);}
+	//	public final static int binarySearch(TestFunc f, int a, int b){
+	//		while(a < b-1){
+	//			int x = (b + a)/2;
+	//			if(f.test(x)) a = x;
+	//			else b = x;
+	//		}
+	//		return a;
+	//	}
 
-// not currently used
-//	public final static int exponentialSearch(TestFunc f, int a){
-//		a = f.test(a) ? 2*a : 1;
-//		while(f.test(a)) a *= 2;
-//		return binarySearch(f, a/2, a);
-//	}
+	// not currently used
+	//	public final static int exponentialSearch(TestFunc f, int a){
+	//		a = f.test(a) ? 2*a : 1;
+	//		while(f.test(a)) a *= 2;
+	//		return binarySearch(f, a/2, a);
+	//	}
 }

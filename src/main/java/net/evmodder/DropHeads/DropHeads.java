@@ -18,19 +18,34 @@
  */
 package net.evmodder.DropHeads;
 
+import com.comphenix.protocol.ProtocolLibrary;
+
 import net.evmodder.DropHeads.JunkUtils.NoteblockMode;
-import net.evmodder.DropHeads.commands.*;
-import net.evmodder.DropHeads.listeners.*;
-import net.evmodder.EvLib.EvPlugin;
-import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.Updater;
+import net.evmodder.DropHeads.commands.CommandDropRate;
+import net.evmodder.DropHeads.commands.CommandSpawnHead;
+import net.evmodder.DropHeads.commands.Commanddebug_all_heads;
+import net.evmodder.DropHeads.listeners.BlockClickListener;
+import net.evmodder.DropHeads.listeners.CreativeMiddleClickListener;
+import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
+import net.evmodder.DropHeads.listeners.EndermanProvokeListener;
+import net.evmodder.DropHeads.listeners.EntityDamageListener;
+import net.evmodder.DropHeads.listeners.EntityDeathListener;
+import net.evmodder.DropHeads.listeners.EntitySpawnListener;
+import net.evmodder.DropHeads.listeners.ItemDropListener;
+import net.evmodder.DropHeads.listeners.LoreStoreBlockBreakListener;
+import net.evmodder.DropHeads.listeners.LoreStoreBlockPlaceListener;
+import net.evmodder.DropHeads.listeners.NoteblockPlayListener;
+import net.evmodder.DropHeads.listeners.ProjectileFireListener;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import plugin.EvPlugin;
+import plugin.FileIO;
 
 //TODO:
 // * /dropheads reload
-// * /droprate edit
-// * refactor CommandSpawnHead (split it up!)
+// * rotate painting heads ('face' = painting)
+// * creaking head obt
 // * improve textures listed at the bottom of head-textures.txt
-// * move textures to DropHeads/textures/MOB_NAME.txt => "SHEEP|RED: value \n SHEEP|BLUE: value ..."?
 // * for non-living (Vehicles, Hanging), cancel self-drop if head drop is triggered (configurable)
 // * un-dye heads (sheep,shulker) with cauldron (gimmick). Note that washing banners only removes pattern, not color
 // * jeb_ sheep head animated phase through colors (gimmick)
@@ -38,7 +53,10 @@ import net.evmodder.EvLib.Updater;
 // * use 'fallback' in TextUtils for head-type, etc.
 // * img.shields/io/bukkit/downloads/id ? other badges on GitHub?
 // * mob: prefix for /droprate
+// * create tester tool to call `getHead(entity)` for every supported variant
+// * maybe add another 0 to the threshold for final drop chance vs raw drop chance for deciding to print it in /droprate
 //TEST:
+// * /droprate edit
 // * head-noteblock-sound in ItemMeta
 // * Trophies/Luck attribute
 // * place-head-block, overwrite-blocks, facing-direction, place-as: KILLER/VICTIM/SERVER
@@ -60,29 +78,13 @@ public final class DropHeads extends EvPlugin{
 	private String LOGFILE_NAME;
 
 	@Override public void onEvEnable(){
-		if(config.getBoolean("update-plugin", false)){
-			new Updater(/*plugin=*/this, /*id=*/274151, getFile(), Updater.UpdateType.DEFAULT, /*announce=*/true);
-		}
-		if(config.getBoolean("bstats-enabled", true) && !config.getBoolean("new")){
-//			MetricsLite metrics =
-					new MetricsLite(this, /*bStats id=*/20140);
-//			metrics.addCustomChart(new MetricsLite.SimplePie("player_heads_only", ()->""+config.getBoolean("player-heads-only", false)));
-//			metrics.addCustomChart(new MetricsLite.SimplePie("simple_mob_heads_only", ()->""+config.getBoolean("simple-mob-heads-only", false)));
-//			metrics.addCustomChart(new MetricsLite.MultiLineChart("behead_events", new Callable<Map<String, Integer>>(){
-//				@Override public Map<String, Integer> call() throws Exception{
-//					Map<String, Integer> valueMap = new HashMap<>();
-//					valueMap.put("mobs", dropChanceAPI.numMobBeheads);
-//					valueMap.put("players", dropChanceAPI.numPlayerBeheads);
-//					dropChanceAPI.numMobBeheads = dropChanceAPI.numPlayerBeheads = 0;
-//					return valueMap;
-//				}
-//			}));
-		}
 		instance = this;
+		ProtocolLibrary.getProtocolManager();
 		final NoteblockMode m = config.isBoolean("noteblock-mob-sounds")
 				? (config.getBoolean("noteblock-mob-sounds") ? NoteblockMode.LISTENER : NoteblockMode.OFF)
-				: JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
-		api = new InternalAPI(m);
+						: JunkUtils.parseEnumOrDefault(config.getString("noteblock-mob-sounds", "OFF"), NoteblockMode.OFF);
+		final boolean CRACKED_IRON_GOLEMS_ENABLED = config.getBoolean("cracked-iron-golem-heads", false);;
+		api = new InternalAPI(m, CRACKED_IRON_GOLEMS_ENABLED);
 		final boolean GLOBAL_PLAYER_BEHEAD_MSG = config.getString("behead-announcement.player",
 				config.getString("behead-announcement.default", "GLOBAL")).toUpperCase().equals("GLOBAL");
 		final boolean WANT_TO_REPLACE_PLAYER_DEATH_MSG = config.getBoolean("behead-announcement-replaces-player-death-message",
@@ -110,7 +112,7 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("refresh-textures", false)){
 			getServer().getPluginManager().registerEvents(new ItemDropListener(), this);
 		}
-		if(config.getBoolean("head-click-listener", true) || config.getBoolean("cracked-iron-golem-heads", false)){
+		if(config.getBoolean("head-click-listener", true) || CRACKED_IRON_GOLEMS_ENABLED){
 			getServer().getPluginManager().registerEvents(new BlockClickListener(api.translationsFile), this);
 		}
 		if(config.getBoolean("save-custom-lore", true)){
@@ -120,13 +122,10 @@ public final class DropHeads extends EvPlugin{
 		if(config.getBoolean("fix-creative-nbt-copy", true)){
 			getServer().getPluginManager().registerEvents(new CreativeMiddleClickListener(), this);
 		}
-		if(config.getBoolean("prevent-head-placement", false)){
-			getServer().getPluginManager().registerEvents(new PreventBlockPlaceListener(), this);
-		}
 		//TODO: Wait for Minecraft to support custom-namespaced items in /give
-//		if(config.getBoolean("substitute-dropheads-in-give-command", false)){
-//			getServer().getPluginManager().registerEvents(new GiveCommandPreprocessListener(), this);
-//		}
+		//		if(config.getBoolean("substitute-dropheads-in-give-command", false)){
+		//			getServer().getPluginManager().registerEvents(new GiveCommandPreprocessListener(), this);
+		//		}
 		if(!config.getStringList("endermen-camouflage-heads").isEmpty()){
 			getServer().getPluginManager().registerEvents(new EndermanProvokeListener(), this);
 		}
@@ -150,5 +149,29 @@ public final class DropHeads extends EvPlugin{
 		line = line.replace("\n", "")+"\n";
 		getLogger().fine("Writing line to logfile: "+line);
 		return FileIO.saveFile(LOGFILE_NAME, line, /*append=*/true);
+	}
+
+	/**
+	 * Removes all formatting from a TextComponent using MiniMessage.
+	 *
+	 * @param component The Adventure Component to process.
+	 * @return A plain string without formatting.
+	 */
+	public static String stripColor(TextComponent component) {
+		if (component == null) return null;
+		// Serialize the component to plain text without formatting
+		return LegacyComponentSerializer.legacySection().serialize(component);
+	}
+
+	// Helper method to determine "a" or "an" for the given word
+	public static String getIndefiniteArticle(String word) {
+		if (word == null || word.isEmpty()) {
+			return "a";
+		}
+		char firstChar = Character.toLowerCase(word.charAt(0));
+		if ("aeiou".indexOf(firstChar) != -1) {
+			return "an";
+		}
+		return "a";
 	}
 }

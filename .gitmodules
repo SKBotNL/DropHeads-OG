@@ -1,0 +1,3 @@
+[submodule "libs/EvLib-OG"]
+	path = libs/EvLib-OG
+	url = https://github.com/true-og/EvLib-OG

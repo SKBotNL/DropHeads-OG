@@ -16,7 +16,9 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+
 import javax.annotation.Nonnull;
+
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.Statistic;
@@ -49,17 +51,19 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.util.Vector;
+
 import net.evmodder.DropHeads.events.BeheadMessageEvent;
 import net.evmodder.DropHeads.events.EntityBeheadEvent;
 import net.evmodder.DropHeads.listeners.DeathMessagePacketIntercepter;
-import net.evmodder.EvLib.EvUtils;
-import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.TellrawUtils;
-import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
-import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
+import net.kyori.adventure.text.TextComponent;
+import plugin.EvUtils;
+import plugin.FileIO;
+import plugin.extras.HeadUtils;
+import plugin.extras.TellrawUtils;
+import plugin.extras.TellrawUtils.Component;
+import plugin.extras.TellrawUtils.ListComponent;
+import plugin.extras.TellrawUtils.SelectorComponent;
+import plugin.extras.TextUtils;
 
 /** Public API for head drop chance logic loaded from DropHeads configs.
  * Warning: Functions may change or disappear in future releases
@@ -103,7 +107,7 @@ public final class DropChanceAPI{
 	private final LRUCache<ItemStack, Component> weaponCompCache;
 	private final int WEAPON_COMP_CACHE_SIZE;
 
-//	int numMobBeheads, numPlayerBeheads;
+	//	int numMobBeheads, numPlayerBeheads;
 
 	/** Get the default head drop chance for an entity when a drop chance chance is specified in the config.
 	 * @return The default drop chance [0, 1]
@@ -128,9 +132,9 @@ public final class DropChanceAPI{
 			if(config.isList(key) && (strList=config.getStringList(key)) != null && !strList.isEmpty())
 				return strList.stream().map(msg -> TextUtils.translateAlternateColorCodes('&', msg)).toArray(size -> new String[size]);
 			if(config.isString(key) && !defaultMsg.equals(config.getString(key)))
-				return new String[]{TextUtils.translateAlternateColorCodes('&', config.getString(key))};
+				return new String[]{((TextComponent) TextUtils.translateAlternateColorCodes('&', config.getString(key))).content()};
 		}
-		return new String[]{TextUtils.translateAlternateColorCodes('&', defaultMsg)};
+		return new String[]{((TextComponent) TextUtils.translateAlternateColorCodes('&', defaultMsg)).content()};
 	}
 
 	DropChanceAPI(final boolean replacePlayerDeathMsg, final boolean replacePetDeathMsg, DeathMessagePacketIntercepter deathMessageBlocker){
@@ -166,23 +170,23 @@ public final class DropChanceAPI{
 				pl.getConfig(), pl.getAPI().translationsFile);
 		MSH_BEHEAD_BY_WITH_NAMED = parseStringOrStringList("message-beheaded-by-entity-with-item-named", "${KILLER} beheaded ${VICTIM} using ${ITEM}",
 				pl.getConfig(), pl.getAPI().translationsFile);
-//		USE_TRANSLATE_FALLBACKS = pl.getAPI().translationsFile.getBoolean("use-translation-fallbacks", false)
-//				&& Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
+		//		USE_TRANSLATE_FALLBACKS = pl.getAPI().translationsFile.getBoolean("use-translation-fallbacks", false)
+		//				&& Bukkit.getBukkitVersion().compareTo("1.19.4") >= 0;
 
 		DROP_MODES = new ArrayList<>();
 		if(pl.getConfig().contains("head-item-drop-mode"))
-		for(String dropModeName : pl.getConfig().getStringList("head-item-drop-mode")){
-			try{DROP_MODES.add(DropMode.valueOf(dropModeName.toUpperCase()));}
-			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown head DropMode: "+dropModeName);}
-		}
+			for(String dropModeName : pl.getConfig().getStringList("head-item-drop-mode")){
+				try{DROP_MODES.add(DropMode.valueOf(dropModeName.toUpperCase()));}
+				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown head DropMode: "+dropModeName);}
+			}
 		if(DROP_MODES.isEmpty()) DROP_MODES.add(DropMode.EVENT);
 
 		headOverwriteBlocks = new HashSet<>();
 		if(pl.getConfig().contains("head-place-overwrite-blocks") && DROP_MODES.stream().anyMatch(mode -> mode.name().startsWith("PLACE")))
-		for(String matName : pl.getConfig().getStringList("head-place-overwrite-blocks")){
-			try{headOverwriteBlocks.add(Material.valueOf(matName.toUpperCase()));}
-			catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown material in 'head-place-overwrite-blocks': "+matName);}
-		}
+			for(String matName : pl.getConfig().getStringList("head-place-overwrite-blocks")){
+				try{headOverwriteBlocks.add(Material.valueOf(matName.toUpperCase()));}
+				catch(IllegalArgumentException ex){pl.getLogger().severe("Unknown material in 'head-place-overwrite-blocks': "+matName);}
+			}
 		else headOverwriteBlocks.add(Material.AIR);
 
 		SILENT_ANNOUNCE = parseAnnounceMode(pl.getConfig().getString("silentbehead-announcement", "OFF"), AnnounceMode.OFF);
@@ -263,7 +267,7 @@ public final class DropChanceAPI{
 		//Load individual mobs' drop chances
 		mobChances = new HashMap<>();
 		subtypeMobChances = new HashMap<EntityType, HashMap<String, Double>>();
-//		noLootingEffectMobs = new HashSet<EntityType>();
+		//		noLootingEffectMobs = new HashSet<EntityType>();
 		if(PLAYER_HEADS_ONLY){
 			DEFAULT_CHANCE = 0D;
 			final String defaultChances = FileIO.loadResource(pl, "head-drop-rates.txt", /*defaultContent=*/"");
@@ -308,7 +312,7 @@ public final class DropChanceAPI{
 						else continue;
 					}
 					EntityType eType = EntityType.valueOf(eName.replace("DEFAULT", "UNKNOWN"));
-//					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
+					//					if(parts.length > 2 && parts[2].equals("NOLOOTING")) noLootingEffectMobs.add(eType);
 					if(dataTagSep == -1) mobChances.put(eType, dropChance);
 					else if(pl.getAPI().textureExists(parts[0])){
 						HashMap<String, Double> eTypeChances = subtypeMobChances.getOrDefault(eType, new HashMap<String, Double>());
@@ -331,8 +335,8 @@ public final class DropChanceAPI{
 				pl.getLogger().warning("Wither Skeleton Skull drop chance has been modified in 'head-drop-rates.txt', "
 						+ "but this value will be ignored because 'vanilla-wither-skeleton-skulls' is set to true.");
 			}
-//			// No need storing chance-per-mob if it is the default
-//			mobChances.entrySet().removeIf(entry -> entry.getValue() == DEFAULT_CHANCE);
+			//			// No need storing chance-per-mob if it is the default
+			//			mobChances.entrySet().removeIf(entry -> entry.getValue() == DEFAULT_CHANCE);
 		}  // if(!PLAYER_HEADS_ONLY)
 
 		// Dynamically add all the children perms of "dropheads.alwaysbehead.<entity>" and "dropheads.canbehead.<entity>"
@@ -430,9 +434,9 @@ public final class DropChanceAPI{
 	public double getTimeAliveMult(Entity entity){
 		return timeAliveMults.getOrDefault(entity.getType(), DEFAULT_TIME_ALIVE_MULTS).floorEntry(
 				entity.getType() == EntityType.PLAYER
-					? ((Player)entity).getStatistic(Statistic.TIME_SINCE_DEATH)
-					: entity.getTicksLived()
-		).getValue();
+				? ((Player)entity).getStatistic(Statistic.TIME_SINCE_DEATH)
+						: entity.getTicksLived()
+				).getValue();
 	}
 	/** Get the drop chance multipliers applied based on permissions of the killer.
 	 * @param killer The entity to check for drop chance multiplier permissions
@@ -487,56 +491,64 @@ public final class DropChanceAPI{
 	 * @param killer The entity responsible for causing the head item to drop
 	 * @param evt The <code>Entity*Event</code> from which this function is being called
 	 */
+	@SuppressWarnings("deprecation")
 	public void dropHeadItem(ItemStack headItem, Entity entity, Entity killer, Event evt){
 		for(DropMode mode : DROP_MODES){
 			if(headItem == null) break;
 			switch(mode){
-				case EVENT:
-					if(evt instanceof EntityDeathEvent) ((EntityDeathEvent)evt).getDrops().add(headItem);
-					else EvUtils.dropItemNaturally(entity.getLocation(), headItem, rand);
-					headItem = null;
-					break;
-				case PLACE_BY_KILLER:
-				case PLACE_BY_VICTIM:
-				case PLACE:
-					Block headBlock = EvUtils.getClosestBlock(entity.getLocation(), 5, b -> headOverwriteBlocks.contains(b.getType())).getBlock();
-					BlockState state = headBlock.getState();
-					state.setType(headItem.getType());
-					Vector facingVector = entity.getLocation().getDirection(); facingVector.setY(0);  // loc.setPitch(0F)
+			case EVENT:
+				if(evt instanceof EntityDeathEvent) ((EntityDeathEvent)evt).getDrops().add(headItem);
+				else EvUtils.dropItemNaturally(entity.getLocation(), headItem, rand);
+				headItem = null;
+				break;
+			case PLACE_BY_KILLER:
+			case PLACE_BY_VICTIM:
+			case PLACE: {
+				Block headBlock = EvUtils.getClosestBlock(entity.getLocation(), 5, b -> headOverwriteBlocks.contains(b.getType())).getBlock();
+				BlockState state = headBlock.getState();
+				state.setType(headItem.getType());
+				Vector facingVector = entity.getLocation().getDirection(); facingVector.setY(0);  // loc.setPitch(0F)
+				BlockFace blockRotation = JunkUtils.getClosestBlockFace(facingVector, possibleHeadRotations).getOppositeFace();
+				try{
 					Rotatable data = (Rotatable)headBlock.getBlockData();
-					data.setRotation(JunkUtils.getClosestBlockFace(facingVector, possibleHeadRotations).getOppositeFace());
+					data.setRotation(blockRotation);
 					state.setBlockData(data);
-					if(headItem.getType() == Material.PLAYER_HEAD){
-						HeadUtils.setGameProfile((Skull)state, HeadUtils.getGameProfile((SkullMeta)headItem.getItemMeta()));
-					}
-					if(mode != DropMode.PLACE){
-						Entity entityToCheck = (killer == null ||
-								(mode == DropMode.PLACE_BY_VICTIM && (entity instanceof Player || killer instanceof Player == false)))
-								? entity : killer;
-						Event testPermsEvent;
-						if(entityToCheck instanceof Player){
-							testPermsEvent = new BlockPlaceEvent(headBlock, state,
+				}
+				catch(ClassCastException ex){ // Work-around for really dumb Spigot 1.21 change (BlockData for skulls no longer Rotatable)
+					((Skull)state).setRotation(blockRotation);
+				}
+				if(headItem.getType() == Material.PLAYER_HEAD){
+					HeadUtils.setGameProfile((Skull)state, HeadUtils.getGameProfile((SkullMeta)headItem.getItemMeta()));
+				}
+				if(mode != DropMode.PLACE){
+					Entity entityToCheck = (killer == null ||
+							(mode == DropMode.PLACE_BY_VICTIM && (entity instanceof Player || killer instanceof Player == false)))
+							? entity : killer;
+					Event testPermsEvent;
+					if(entityToCheck instanceof Player){
+						testPermsEvent = new BlockPlaceEvent(headBlock, state,
 								headBlock.getRelative(BlockFace.DOWN), headItem, (Player)entityToCheck, /*canBuild=*/true, EquipmentSlot.HAND);
-						}
-						else{
-							testPermsEvent = new EntityBlockFormEvent(entityToCheck, headBlock, state);
-						}
-						pl.getServer().getPluginManager().callEvent(testPermsEvent);
-						if(((Cancellable)testPermsEvent).isCancelled()){
-							pl.getLogger().fine("Head placement failed, permission-lacking player: "+entityToCheck.getName());
-							break;
-						}
 					}
-					state.update(/*force=*/true);
-					headItem = null;
-					break;
-				case GIVE:
-					headItem = JunkUtils.giveItemToEntity(killer, headItem);
-					break;
-				case SPAWN:
-					entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
-					headItem = null;
-					break;
+					else{
+						testPermsEvent = new EntityBlockFormEvent(entityToCheck, headBlock, state);
+					}
+					pl.getServer().getPluginManager().callEvent(testPermsEvent);
+					if(((Cancellable)testPermsEvent).isCancelled()){
+						pl.getLogger().fine("Head placement failed, permission-lacking player: "+entityToCheck.getName());
+						break;
+					}
+				}
+				state.update(/*force=*/true);
+				headItem = null;
+				break;
+			}
+			case GIVE:
+				headItem = JunkUtils.giveItemToEntity(killer, headItem);
+				break;
+			case SPAWN:
+				entity.getWorld().dropItemNaturally(entity.getLocation(), headItem);
+				headItem = null;
+				break;
 			}//switch(mode)
 		}//for(DROP_MODES)
 	}
@@ -583,10 +595,12 @@ public final class DropChanceAPI{
 		final Component itemComp = getWeaponComponent(killer, weapon);
 		if(killerComp != null){
 			if(itemComp != null){
+				//TODO: if(pl.getAPI().USE_TRANSLATE_FALLBACKS)
+				//death.attack.behead, death.attack.behead.player, death.attack.behead.player.item
 				final boolean hasCustomName = weapon != null && weapon.hasItemMeta() && weapon.getItemMeta().hasDisplayName();
 				message.addComponent(hasCustomName
 						? MSH_BEHEAD_BY_WITH_NAMED[rand.nextInt(MSH_BEHEAD_BY_WITH_NAMED.length)]
-						: MSH_BEHEAD_BY_WITH[rand.nextInt(MSH_BEHEAD_BY_WITH.length)]);
+								: MSH_BEHEAD_BY_WITH[rand.nextInt(MSH_BEHEAD_BY_WITH.length)]);
 				message.replaceRawTextWithComponent("${ITEM}", itemComp);
 			}
 			else message.addComponent(MSH_BEHEAD_BY[rand.nextInt(MSH_BEHEAD_BY.length)]);
@@ -624,56 +638,56 @@ public final class DropChanceAPI{
 
 		AnnounceMode mode = mobAnnounceModes.getOrDefault(entity.getType(), DEFAULT_ANNOUNCE);
 		if(mode != AnnounceMode.OFF && mode != SILENT_ANNOUNCE && killer != null && (
-			killer.hasPermission("dropheads.silentbehead") ||
-			(killer.hasPermission("dropheads.silentbehead.invisible")
-				&& killer instanceof LivingEntity && ((LivingEntity)killer).hasPotionEffect(PotionEffectType.INVISIBILITY)
-			) ||
-			(killer.hasPermission("dropheads.silentbehead.vanished")
-				&& killer instanceof Player && JunkUtils.isVanished((Player)killer)
-			)
-		)) mode = SILENT_ANNOUNCE;
+				killer.hasPermission("dropheads.silentbehead") ||
+				(killer.hasPermission("dropheads.silentbehead.invisible")
+						&& killer instanceof LivingEntity && ((LivingEntity)killer).hasPotionEffect(PotionEffectType.INVISIBILITY)
+						) ||
+				(killer.hasPermission("dropheads.silentbehead.vanished")
+						&& killer instanceof Player && JunkUtils.isVanished((Player)killer)
+						)
+				)) mode = SILENT_ANNOUNCE;
 
 		final Entity petOwnerToMsg = REPLACE_PET_DEATH_MESSAGE && entity instanceof Tameable && ((Tameable)entity).getOwner() != null
 				? pl.getServer().getEntity(((Tameable)entity).getOwner().getUniqueId()) : null;
 		final UUID petOwnerToMsgUUID = petOwnerToMsg == null ? null : petOwnerToMsg.getUniqueId();
 
 		switch(mode){
-			case GLOBAL:
-				if(entity instanceof Player && REPLACE_PLAYER_DEATH_MESSAGE && evt != null){
-					// Set the behead death message so that other plugins will see it (it will still get cleared by the intercepter)
-					// In order to do this, we need to cancel the extra plaintext message in DeathMessagePacketIntercepter
-					if(REPLACE_PLAYER_DEATH_EVT_MESSAGE){
-						final String plainDeathMsg = message.toPlainText();
-						((PlayerDeathEvent)evt).setDeathMessage(plainDeathMsg);
-						deathMessageBlocker.blockSpeficicMessage(plainDeathMsg, /*ticksBlockedFor=*/5);
-					}
+		case GLOBAL:
+			if(entity instanceof Player && REPLACE_PLAYER_DEATH_MESSAGE && evt != null){
+				// Set the behead death message so that other plugins will see it (it will still get cleared by the intercepter)
+				// In order to do this, we need to cancel the extra plaintext message in DeathMessagePacketIntercepter
+				if(REPLACE_PLAYER_DEATH_EVT_MESSAGE){
+					final String plainDeathMsg = message.toPlainText();
+					((PlayerDeathEvent)evt).deathMessage(TextUtils.translateAlternateColorCodes('&', plainDeathMsg));
+					deathMessageBlocker.blockSpeficicMessage(plainDeathMsg, /*ticksBlockedFor=*/5);
 				}
-				for(Player p : pl.getServer().getOnlinePlayers()){
-					sendBeheadMessage(p, entity, killer, message, /*isGlobal=*/true, /*isPetDeathMsg=*/p.getUniqueId() == petOwnerToMsgUUID);
-				}
-				break;
-			case LOCAL:
-				HashSet<UUID> recipients = new HashSet<UUID>();
-				for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST)){
-					sendBeheadMessage(p, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/p.getUniqueId() == petOwnerToMsgUUID);
-					recipients.add(p.getUniqueId());
-				}
-				if(petOwnerToMsgUUID != null && !recipients.contains(petOwnerToMsg.getUniqueId())){
-					if(petOwnerToMsg instanceof Player == false) pl.getLogger().warning("Non-player pet owner: "+petOwnerToMsg.getName());
-					else sendBeheadMessage((Player)petOwnerToMsg, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/true);
-				}
-				break;
-			case DIRECT:
-				if(killer instanceof Player){
-					sendBeheadMessage((Player)killer, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/killer.getUniqueId() == petOwnerToMsgUUID);
-				}
-				if(petOwnerToMsgUUID != null && !killer.getUniqueId().equals(petOwnerToMsg.getUniqueId())){
-					if(petOwnerToMsg instanceof Player == false) pl.getLogger().warning("Non-player pet owner: "+petOwnerToMsg.getName());
-					else sendBeheadMessage((Player)petOwnerToMsg, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/true);
-				}
-				break;
-			case OFF:
-				break;
+			}
+			for(Player p : pl.getServer().getOnlinePlayers()){
+				sendBeheadMessage(p, entity, killer, message, /*isGlobal=*/true, /*isPetDeathMsg=*/p.getUniqueId() == petOwnerToMsgUUID);
+			}
+			break;
+		case LOCAL:
+			HashSet<UUID> recipients = new HashSet<UUID>();
+			for(Player p : EvUtils.getNearbyPlayers(entity.getLocation(), LOCAL_RANGE, CROSS_DIMENSIONAL_BROADCAST)){
+				sendBeheadMessage(p, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/p.getUniqueId() == petOwnerToMsgUUID);
+				recipients.add(p.getUniqueId());
+			}
+			if(petOwnerToMsgUUID != null && !recipients.contains(petOwnerToMsg.getUniqueId())){
+				if(petOwnerToMsg instanceof Player == false) pl.getLogger().warning("Non-player pet owner: "+petOwnerToMsg.getName());
+				else sendBeheadMessage((Player)petOwnerToMsg, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/true);
+			}
+			break;
+		case DIRECT:
+			if(killer instanceof Player){
+				sendBeheadMessage((Player)killer, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/killer.getUniqueId() == petOwnerToMsgUUID);
+			}
+			if(petOwnerToMsgUUID != null && !killer.getUniqueId().equals(petOwnerToMsg.getUniqueId())){
+				if(petOwnerToMsg instanceof Player == false) pl.getLogger().warning("Non-player pet owner: "+petOwnerToMsg.getName());
+				else sendBeheadMessage((Player)petOwnerToMsg, entity, killer, message, /*isGlobal=*/false, /*isPetDeathMsg=*/true);
+			}
+			break;
+		case OFF:
+			break;
 		}
 	}
 
@@ -691,7 +705,7 @@ public final class DropChanceAPI{
 				.replaceAll("(?i)\\$\\{(KILLER|BEHEADER)\\}", killer == null ? "" : Matcher.quoteReplacement(getKillerComponent(killer).toPlainText()))
 				.replaceAll("(?i)\\$\\{(ITEM|WEAPON)\\}", weapon == null ? "" : Matcher.quoteReplacement(getWeaponComponent(killer, weapon).toPlainText()))
 				.replaceAll("(?i)\\$\\{TIMESTAMP\\}", ""+System.currentTimeMillis())
-		);
+				);
 	}
 
 	// NOTE: "public" -- used by PeacefulPetHeads
@@ -704,7 +718,7 @@ public final class DropChanceAPI{
 	 * @return Whether the head drop was completed successfully
 	 */
 	public boolean triggerHeadDropEvent(Entity entity, Entity killer, Event evt, ItemStack weapon, Component beheadMessage){
-//		pl.getLogger().info("trigger head drop called");
+		//		pl.getLogger().info("trigger head drop called");
 		ItemStack headItem = pl.getAPI().getHead(entity);
 		EntityBeheadEvent beheadEvent = new EntityBeheadEvent(entity, killer, evt, headItem);
 		pl.getServer().getPluginManager().callEvent(beheadEvent);
@@ -717,8 +731,8 @@ public final class DropChanceAPI{
 		if(weapon != null && weapon.getType() == Material.AIR) weapon = null;
 		announceHeadDrop(beheadMessage, entity, killer, evt);
 		if(entity instanceof Player ? LOG_PLAYER_BEHEAD : LOG_MOB_BEHEAD) logHeadDrop(entity, killer, weapon);
-//		if(entity instanceof Player) ++numPlayerBeheads; else ++numMobBeheads;
-//		pl.getLogger().info("trigger head drop success");
+		//		if(entity instanceof Player) ++numPlayerBeheads; else ++numMobBeheads;
+		//		pl.getLogger().info("trigger head drop success");
 		return true;
 	}
 	/** Attempt to drop a head item for an Entity with the regular behead message.

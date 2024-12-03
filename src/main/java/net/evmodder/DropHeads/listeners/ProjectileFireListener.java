@@ -10,12 +10,13 @@ import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
+
 import net.evmodder.DropHeads.DropHeads;
 
 public class ProjectileFireListener implements Listener{
 	private final DropHeads pl;
 	private final boolean ALLOW_NON_PLAYER_KILLS;
-	
+
 	public ProjectileFireListener(){
 		pl = DropHeads.getPlugin();
 		ALLOW_NON_PLAYER_KILLS = pl.getConfig().getBoolean("drop-for-nonplayer-kills", false);
@@ -23,19 +24,19 @@ public class ProjectileFireListener implements Listener{
 
 	private boolean canShootProjectiles(Material type){
 		switch(type.name()){
-			// TODO: This list is incomplete, but should include all projectiles that trigger an EntityDamageEvent
-			case "BOW":
-			case "CROSS_BOW":
-			case "TRIDENT":
-			case "FIRE_CHARGE":
-			case "SNOWBALL":
-			case "SPLASH_POTION":
-			case "LINGERING_POTION":
-			case "FISHING_ROD":
-			case "EGG":
-				return true;
-			default:
-				return false;
+		// TODO: This list is incomplete, but should include all projectiles that trigger an EntityDamageEvent
+		case "BOW":
+		case "CROSS_BOW":
+		case "TRIDENT":
+		case "FIRE_CHARGE":
+		case "SNOWBALL":
+		case "SPLASH_POTION":
+		case "LINGERING_POTION":
+		case "FISHING_ROD":
+		case "EGG":
+			return true;
+		default:
+			return false;
 		}
 	}
 

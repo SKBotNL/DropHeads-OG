@@ -1,7 +1,23 @@
-# DropHeads
-A light-weight, highly configurable head collecting plugin for Minecraft
-<br>
-<br>
+# DropHeads-OG
+
+ A fork of [DropHeads](https://github.com/EvModder/DropHeads) that builds (TM).
+ 
+ Maintained for 1.19.4 by [TrueOG Network](https://true-og.net).
+ 
+## Other changes from DropHeads:
+
+- Uses a custom version of EvLib, [EvLib-OG](https://github.com/true-og/EvLib-OG).
+
+- Removed plugin updater.
+
+- Removed bStats.
+
+- Replace proprietary Mojang AuthLib API.
+
+- Replace netty code with ProtocolLib.
+
+- Replace APIs deprecated in Purpur 1.19.4.
+
 **Main configuration file:**<br>
 [config.yml](./config.yml)
 <br>
@@ -19,7 +35,7 @@ A light-weight, highly configurable head collecting plugin for Minecraft
 
 **Javadocs** ([available here](https://evmodder.github.io/DropHeads/net/evmodder/DropHeads/events/package-summary.html))**:**<br>
 For plugin developers interested in hooking into the DropHeads API
-<br>
-<br>
-<br>
-<a href='https://ko-fi.com/F2F5Q7ATV' target='_blank'><img height='30' style='border:0px;height:30px;' src='https://storage.ko-fi.com/cdn/brandasset/kofi_button_dark.png' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+
+## License:
+
+[LGPLv3](https://github.com/true-og/DropHeads-OG/blob/master/LICENSE)

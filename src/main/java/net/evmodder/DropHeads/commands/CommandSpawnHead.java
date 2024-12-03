@@ -13,7 +13,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.apache.commons.lang.ArrayUtils;
+
+import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -26,30 +27,31 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
+
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
 import net.evmodder.DropHeads.JunkUtils;
 import net.evmodder.DropHeads.TextureKeyLookup;
-import net.evmodder.EvLib.EvCommand;
-import net.evmodder.EvLib.extras.EntityUtils;
-import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
-import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
-import net.evmodder.EvLib.extras.TextUtils;
-import net.evmodder.EvLib.extras.WebUtils;
-import net.evmodder.EvLib.extras.SelectorUtils.Selector;
-import net.evmodder.EvLib.extras.TellrawUtils;
+import plugin.EvCommand;
+import plugin.extras.EntityUtils;
+import plugin.extras.HeadUtils;
+import plugin.extras.SelectorUtils.Selector;
+import plugin.extras.TellrawUtils;
+import plugin.extras.TellrawUtils.Component;
+import plugin.extras.TellrawUtils.ListComponent;
+import plugin.extras.TellrawUtils.RawTextComponent;
+import plugin.extras.TellrawUtils.SelectorComponent;
+import plugin.extras.TellrawUtils.TranslationComponent;
+import plugin.extras.TextUtils;
+import plugin.extras.WebUtils;
+import plugin.util.PlayerProfile;
 
 public class CommandSpawnHead extends EvCommand{
 	final private DropHeads pl;
 	final private String CMD_TRANSLATE_PATH = "commands.spawnhead.";
 	final private boolean ENABLE_LOG;
 	final private String LOG_FORMAT;
-//	final private int MAX_HDB_IDS_SHOWN = 200;
+	//	final private int MAX_HDB_IDS_SHOWN = 200;
 	final private int MAX_ENTITIES_SELECTED;
 
 	// TODO: Maybe add aliases (eg, ['url:','value:'] -> 'code:')
@@ -162,16 +164,16 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		else if(HDB_PREFIX.equals(prefix)){
 			if(pl.getInternalAPI().getHeadDatabaseAPI() == null/* MAX_HDB_ID == -1 */) return null;
-//			try{if(Integer.parseInt(target) > MAX_HDB_ID) return null;}
-//			catch(NumberFormatException ex){return null;}
+			//			try{if(Integer.parseInt(target) > MAX_HDB_ID) return null;}
+			//			catch(NumberFormatException ex){return null;}
 			return Arrays.asList(prefix + target);
-//			if(MAX_HDB_ID != -1){
-//				int numResults = ((""+MAX_HDB_ID).length() - target.length())*11;
-//				tabCompletes.addAll(
-//						generateNumericCompletions(/*id_prefix=*/target, /*highest_id=*/MAX_HDB_ID, /*max_ids_shown=*/MAX_HDB_IDS_SHOWN)
-//						.stream().map(id -> prefix+id).collect(Collectors.toList())
-//				);
-//			}
+			//			if(MAX_HDB_ID != -1){
+			//				int numResults = ((""+MAX_HDB_ID).length() - target.length())*11;
+			//				tabCompletes.addAll(
+			//						generateNumericCompletions(/*id_prefix=*/target, /*highest_id=*/MAX_HDB_ID, /*max_ids_shown=*/MAX_HDB_IDS_SHOWN)
+			//						.stream().map(id -> prefix+id).collect(Collectors.toList())
+			//				);
+			//			}
 		}
 		else if(SELF_PREFIX.equals(prefix)) tabCompletes.add(sender.getName());
 		else if(AMT_PREFIX.equals(prefix)){
@@ -196,15 +198,15 @@ public class CommandSpawnHead extends EvCommand{
 		return tabCompletes;
 	}
 
-	private GameProfile searchForPlayer(String target){
+	private PlayerProfile searchForPlayer(String target){
 		if(!target.matches("[a-zA-Z0-9_-]+")) return null;
-//		@SuppressWarnings("deprecation")
-//		OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
-//		if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
-//		try{
-//			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
-//			if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
-//		}catch(IllegalArgumentException ex){}
+		//		@SuppressWarnings("deprecation")
+		//		OfflinePlayer p = pl.getServer().getOfflinePlayer(target);
+		//		if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
+		//		try{
+		//			p = pl.getServer().getOfflinePlayer(UUID.fromString(target));
+		//			if(p != null && p.hasPlayedBefore()) return new GameProfile(p.getUniqueId(), p.getName());
+		//		}catch(IllegalArgumentException ex){}
 		return JunkUtils.getGameProfile(target, /*fetchSkin=*/false, /*nullForSync=*/null);
 	}
 
@@ -281,7 +283,7 @@ public class CommandSpawnHead extends EvCommand{
 			}
 			target = Base64.getEncoder().encodeToString(
 					("{\"textures\":{\"SKIN\":{\"url\":\""+url+"\"}}}").getBytes(StandardCharsets.ISO_8859_1));
-//			pl.getLogger().fine("recovered url: "+WebUtils.getTextureURL(new String(target.getBytes()), /*verify=*/true));
+			//			pl.getLogger().fine("recovered url: "+WebUtils.getTextureURL(new String(target.getBytes()), /*verify=*/true));
 			String longestMatchingKey = "";
 			for(Entry<String, String> entry : pl.getAPI().getTextures().entrySet()){
 				if(entry.getValue().equals(target) && entry.getKey().length() > longestMatchingKey.length()){
@@ -297,7 +299,7 @@ public class CommandSpawnHead extends EvCommand{
 			}
 		}
 		else if(prefix.equals(PLAYER_PREFIX) || (prefix.isEmpty()/* && ... */)){
-			final GameProfile profile = searchForPlayer(target);
+			final PlayerProfile profile = searchForPlayer(target);
 			if(profile != null){
 				if(!sender.hasPermission("dropheads.spawn.players")
 						&& (!profile.getName().equals(sender.getName()) || !sender.hasPermission("dropheads.spawn.self"))){
@@ -434,7 +436,7 @@ public class CommandSpawnHead extends EvCommand{
 				headItems.add(head);
 				if(ENABLE_LOG) logGiveHeadCommand(
 						e instanceof Player ? e.getName() : TextureKeyLookup.getTextureKey(e),
-						sender.getName(), head.getAmount(), giveTargets.toString());
+								sender.getName(), head.getAmount(), giveTargets.toString());
 			}
 			if(headItems.isEmpty()){
 				sender.sendMessage(String.format(translate("errors.head-not-found"), /*prefix=*/"", fullTarget));
@@ -473,10 +475,10 @@ public class CommandSpawnHead extends EvCommand{
 					if(notEnoughInvSpaceWarned.add(((Entity)giveTarget).getUniqueId())){
 						if(isSelf) sender.sendMessage(slot != null
 								? String.format(translate("errors.slot-unavailable.self"), slot)
-								: translate("errors.not-enough-inv-space.self"));
+										: translate("errors.not-enough-inv-space.self"));
 						else sender.sendMessage(slot != null
 								? String.format(translate("errors.slot-unavailable.target"), ((Entity)giveTarget).getName(), slot)
-								: String.format(translate("errors.not-enough-inv-space.target"), ((Entity)giveTarget).getName()));
+										: String.format(translate("errors.not-enough-inv-space.target"), ((Entity)giveTarget).getName()));
 					}
 					if(notEnoughInvSpaceWarned.size() == giveTargets.size()) return true;
 				}
@@ -490,8 +492,8 @@ public class CommandSpawnHead extends EvCommand{
 		// Send success message
 		String messageFormatStr =
 				recipientComps.size() == 0 ? (amtOfEachHead.size() > 1 ? translate("success.spawned-heads") : translate("success.spawned-head"))
-				: recipientComps.size() == 1 ? (amtOfEachHead.size() > 1 ? translate("success.gave-heads") : translate("success.gave-head"))
-				: (amtOfEachHead.size() > 1 ? translate("success.multi-gave-heads") : translate("success.multi-gave-head"));
+						: recipientComps.size() == 1 ? (amtOfEachHead.size() > 1 ? translate("success.gave-heads") : translate("success.gave-head"))
+								: (amtOfEachHead.size() > 1 ? translate("success.multi-gave-heads") : translate("success.multi-gave-head"));
 		if(!messageFormatStr.contains("%s")) messageFormatStr += "%s";
 
 		// TODO: This assumes the message has a default color & formats when it actually might not.
@@ -515,12 +517,12 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		else{
 			// TODO: line below assumes [head-list] is the FIRST "%", which might not be a good assumption.
-//			final Component headColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
-//					messageFormatStr.substring(0, messageFormatStr.indexOf('%')));
-//			final Component amtColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(translate("success.item-with-amount-format");
+			//			final Component headColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(
+			//					messageFormatStr.substring(0, messageFormatStr.indexOf('%')));
+			//			final Component amtColorAndFormats = TellrawUtils.getCurrentColorAndFormatProperties(translate("success.item-with-amount-format");
 			//TODO: uncomment line below once TranslationComponent supports properly applying color codes from "jsonKey" to "with"/children
 			headItemListComp.addComponent("");
-//			if(headColorAndFormats != null) headItemListComp.addComponent(headColorAndFormats);
+			//			if(headColorAndFormats != null) headItemListComp.addComponent(headColorAndFormats);
 			for(int i=0; i<headNameComps.size(); ++i){
 				Integer amt = amtOfEachHead.get(headNameComps.get(i).toString());
 				if(amt > 1){
@@ -540,8 +542,8 @@ public class CommandSpawnHead extends EvCommand{
 		}
 		final TranslationComponent successMessage = recipientListComp.isEmpty()
 				? new TranslationComponent(messageFormatStr, headItemListComp)
-				: new TranslationComponent(messageFormatStr, headItemListComp, recipientListComp);
-//		pl.getLogger().info("tellraw toString: "+successMessage.toString());
+						: new TranslationComponent(messageFormatStr, headItemListComp, recipientListComp);
+		//		pl.getLogger().info("tellraw toString: "+successMessage.toString());
 		pl.getServer().dispatchCommand(pl.getServer().getConsoleSender(), "minecraft:tellraw "+sender.getName()+" "+successMessage.toString());
 		return true;
 	}

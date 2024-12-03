@@ -1,6 +1,7 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.util.List;
+
 import org.bukkit.block.Skull;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -9,11 +10,11 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
+
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
-import net.evmodder.EvLib.extras.HeadUtils;
+import plugin.extras.HeadUtils;
+import plugin.util.PlayerProfile;
 
 public class LoreStoreBlockPlaceListener implements Listener{
 	private final boolean HAS_DEFAULT_LORE;
@@ -29,11 +30,11 @@ public class LoreStoreBlockPlaceListener implements Listener{
 		if(!HeadUtils.isPlayerHead(evt.getBlockPlaced().getType())) return;
 		final ItemStack headItem = evt.getHand() == EquipmentSlot.HAND
 				? evt.getPlayer().getInventory().getItemInMainHand()
-				: evt.getPlayer().getInventory().getItemInOffHand();
+						: evt.getPlayer().getInventory().getItemInOffHand();
 
 		if(!headItem.hasItemMeta() || !headItem.getItemMeta().hasLore()) return; // Nothing to save!
 		final SkullMeta meta = (SkullMeta)headItem.getItemMeta();
-		final GameProfile profile = HeadUtils.getGameProfile(meta);
+		final PlayerProfile profile = HeadUtils.getGameProfile(meta);
 		if(profile == null) return; // We can't append lore to an invalid GameProfile...
 
 		final List<String> customLore = JunkUtils.getLore(headItem);
@@ -44,7 +45,7 @@ public class LoreStoreBlockPlaceListener implements Listener{
 		}
 		final String combinedLore = String.join("\n", customLore);
 
-		profile.getProperties().put(JunkUtils.DH_LORE_KEY, new Property(JunkUtils.DH_LORE_KEY, combinedLore));
+		profile.getProperties().put(JunkUtils.DH_LORE_KEY, combinedLore);
 		final Skull skull = (Skull)evt.getBlockPlaced().getState();
 		HeadUtils.setGameProfile(skull, profile);
 		skull.update(true);

@@ -1,8 +1,8 @@
 package net.evmodder.DropHeads.listeners;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -12,13 +12,13 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
-import com.mojang.authlib.GameProfile;
-import com.mojang.authlib.properties.Property;
+
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.JunkUtils;
-import net.evmodder.EvLib.extras.HeadUtils;
-import net.evmodder.EvLib.extras.TellrawUtils;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
+import plugin.extras.HeadUtils;
+import plugin.extras.TellrawUtils;
+import plugin.extras.TellrawUtils.Component;
+import plugin.util.PlayerProfile;
 
 public class LoreStoreBlockBreakListener implements Listener{
 	// This listener is only registered when 'save-custom-lore' = true
@@ -29,19 +29,19 @@ public class LoreStoreBlockBreakListener implements Listener{
 		if(!HeadUtils.isPlayerHead(block.getType())) return null;
 
 		final Skull skull = (Skull)block.getState();
-		final GameProfile profile = HeadUtils.getGameProfile(skull);
+		final PlayerProfile profile = HeadUtils.getGameProfile(skull);
 		if(profile == null) return null;
 
 		List<String> lore = null;
-		GameProfile profileWithoutLore = null;
+		PlayerProfile profileWithoutLore = null;
 		if(profile.getProperties() != null && profile.getProperties().containsKey(JunkUtils.DH_LORE_KEY)){
-			final Collection<Property> props = profile.getProperties().get(JunkUtils.DH_LORE_KEY);
+			final String props = profile.getProperties().get(JunkUtils.DH_LORE_KEY);
 			if(props != null && !props.isEmpty()){
-				if(props.size() != 1) DropHeads.getPlugin().getLogger().warning("Multiple lore keys on a single head profile in getItemWithLore()");
-				lore = Arrays.asList(JunkUtils.getPropertyValue(props.iterator().next()).split("\\n"));
-				profileWithoutLore = new GameProfile(profile.getId(), profile.getName());
+				if(props != null && ! props.isEmpty()) DropHeads.getPlugin().getLogger().warning("Multiple lore keys on a single head profile in getItemWithLore()");
+				lore = Arrays.asList(props);
+				profileWithoutLore = new PlayerProfile(profile.getUuid(), profile.getName());
 				profileWithoutLore.getProperties().putAll(profile.getProperties());
-				profileWithoutLore.getProperties().removeAll(JunkUtils.DH_LORE_KEY);
+				profileWithoutLore.getProperties().remove(JunkUtils.DH_LORE_KEY);
 			}
 		}
 		if(lore == null){
@@ -49,7 +49,7 @@ public class LoreStoreBlockBreakListener implements Listener{
 			final int loreStart = profile.getName().indexOf('>');
 			if(loreStart == -1) return null;
 			lore = Arrays.asList(profile.getName().substring(loreStart + 1).split("\\n", -1));
-			profileWithoutLore = new GameProfile(profile.getId(), profile.getName().substring(0, loreStart));
+			profileWithoutLore = new PlayerProfile(profile.getUuid(), profile.getName().substring(0, loreStart));
 			profileWithoutLore.getProperties().putAll(profile.getProperties());
 		}
 		ItemStack headItem = DropHeads.getPlugin().getAPI().getHead(profileWithoutLore);

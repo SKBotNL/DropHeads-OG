@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.bukkit.ChatColor;
+
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
@@ -17,9 +17,11 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+
 import net.evmodder.DropHeads.DropHeads;
-import net.evmodder.EvLib.EvCommand;
-import net.evmodder.EvLib.extras.HeadUtils;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import plugin.EvCommand;
+import plugin.extras.HeadUtils;
 
 public class Commanddebug_all_heads extends EvCommand{
 	final private DropHeads pl;
@@ -56,7 +58,7 @@ public class Commanddebug_all_heads extends EvCommand{
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String args[]){
 		if(sender instanceof Player == false){
-			sender.sendMessage(ChatColor.RED+"This command can only be run by in-game players!");
+			sender.sendMessage("ERROR: This command can only be run by in-game players!");
 			return true;
 		}
 		final boolean noGrumm = args.length == 0 || !args[args.length-1].toLowerCase().equals("true");
@@ -105,9 +107,9 @@ public class Commanddebug_all_heads extends EvCommand{
 			numSubKeys.put(rootKey, numSubKeys.getOrDefault(rootKey, 0) + 1);
 		});
 		textureKeys = textureKeys.stream()
-			.sorted((s1, s2) -> {
-				String root1 = getRootParentKey(s1), root2 = getRootParentKey(s2);
-				switch(orderBy){
+				.sorted((s1, s2) -> {
+					String root1 = getRootParentKey(s1), root2 = getRootParentKey(s2);
+					switch(orderBy){
 					case NUM_SUBKEYS_ASC:
 						if(numSubKeys.get(root1) < numSubKeys.get(root2)) return -2;
 						if(numSubKeys.get(root1) > numSubKeys.get(root2)) return +2;
@@ -115,9 +117,9 @@ public class Commanddebug_all_heads extends EvCommand{
 					default:
 						if(root1.compareTo(root2) != 0) return root1.compareTo(root2);
 						return s1.compareTo(s2);
-				}
-			})
-			.collect(Collectors.toList());
+					}
+				})
+				.collect(Collectors.toList());
 
 		// Place heads
 		final long numHeads = textureKeys.size();
@@ -129,27 +131,37 @@ public class Commanddebug_all_heads extends EvCommand{
 			dimX = dimY = dimZ = (int)Math.floor(Math.cbrt(numHeads));
 			if(dimX*dimY*dimZ < numHeads) if((++dimX)*dimY*dimZ < numHeads) if(dimX*dimY*(++dimZ) < numHeads) ++dimY;
 			final int dX = dimX, dY = dimY, dZ = dimZ;
-	
+
 			for(int x=0; x<dX; ++x) for(int z=0; z<dZ; ++z) for(int y=0; y<dY; ++y){
 				if(!loc.clone().add(((dX/2)-x)*2, ((dY/2)-y)*2, ((dZ/2)-z)*2).getBlock().isEmpty()){
-					sender.sendMessage(ChatColor.RED+"Error: Not enough space around the player to place the heads!");
+					if(sender instanceof Player) {
+
+						Player player = (Player) sender;
+						player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Error: Not enough space around the player to place the heads!"));
+
+					}
+					else {
+
+						sender.sendMessage("Error: Not enough space around the player to place the heads!");
+
+					}
 					return true;
 				}
 			}
 			sender.sendMessage("Dimensions: "+dX+","+dY+","+dZ);
 			Iterator<String> it = textureKeys.iterator();
 			//pl.getServer().getScheduler()(pl, new Runnable(){public void run(){
-				for(int z=dZ; z>0 && it.hasNext(); --z)
+			for(int z=dZ; z>0 && it.hasNext(); --z)
 				for(int y=dY; y>0 && it.hasNext(); --y)
-				for(int x=dX; x>0 && it.hasNext(); --x){
-					Location hLoc = loc.clone().add(((dX/2)-x)*2, ((dY/2)-y)*2, ((dZ/2)-z)*2);
-					String key = it.next();
-					/*if(noGrumm){
+					for(int x=dX; x>0 && it.hasNext(); --x){
+						Location hLoc = loc.clone().add(((dX/2)-x)*2, ((dY/2)-y)*2, ((dZ/2)-z)*2);
+						String key = it.next();
+						/*if(noGrumm){
 						while(key.endsWith("|GRUMM") && it.hasNext()) key = it.next();
 						if(key.endsWith("|GRUMM")) break;
 					}*/
-					setHead(hLoc, key, null);
-				}
+						setHead(hLoc, key, null);
+					}
 			//}});
 		}
 		else{
@@ -163,24 +175,34 @@ public class Commanddebug_all_heads extends EvCommand{
 				if(dimX*dimY < numHeads) if((++dimX)*dimY < numHeads) ++dimY;
 			}
 			final int dX = dimX, dY = dimY;
-	
+
 			for(int x=0; x<dX; ++x) for(int y=0; y<dY; ++y){
 				if(!loc.clone().add(x, y, 0).getBlock().isEmpty()){
-					sender.sendMessage(ChatColor.RED+"Error: Not enough space around the player to place the heads!");
+					if(sender instanceof Player) {
+
+						Player player = (Player) sender;
+						player.sendMessage(MiniMessage.miniMessage().deserialize("<red>Error: Not enough space around the player to place the heads!"));
+
+					}
+					else {
+
+						sender.sendMessage("Error: Not enough space around the player to place the heads!");
+
+					}
 					return true;
 				}
 			}
 			sender.sendMessage("Dimensions: "+dX+"x"+dY);
 			Iterator<String> it = textureKeys.iterator();
 			//pl.getServer().getScheduler()(pl, new Runnable(){public void run(){
-				for(int y=dY; y>0 && it.hasNext(); --y) for(int x=dX; x>0 && it.hasNext(); --x){
-					String key = it.next();
-					/*if(noGrumm){
+			for(int y=dY; y>0 && it.hasNext(); --y) for(int x=dX; x>0 && it.hasNext(); --x){
+				String key = it.next();
+				/*if(noGrumm){
 						while(key.endsWith("|GRUMM") && it.hasNext()) key = it.next();
 						if(key.endsWith("|GRUMM")) break;
 					}*/
-					setHead(loc.clone().add(x, y, 0), key, BlockFace.NORTH);
-				}
+				setHead(loc.clone().add(x, y, 0), key, BlockFace.NORTH);
+			}
 			//}});
 		}
 		sender.sendMessage("Finished placing "+numHeads+" heads");

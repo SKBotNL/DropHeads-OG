@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -18,17 +19,18 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.util.Vector;
+
 import net.evmodder.DropHeads.DropChanceAPI;
 import net.evmodder.DropHeads.DropHeads;
 import net.evmodder.DropHeads.InternalAPI;
 import net.evmodder.DropHeads.JunkUtils;
-import net.evmodder.EvLib.EvCommand;
-import net.evmodder.EvLib.FileIO;
-import net.evmodder.EvLib.extras.TellrawUtils.Component;
-import net.evmodder.EvLib.extras.TellrawUtils.ListComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.TranslationComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.RawTextComponent;
-import net.evmodder.EvLib.extras.TellrawUtils.SelectorComponent;
+import plugin.EvCommand;
+import plugin.FileIO;
+import plugin.extras.TellrawUtils.Component;
+import plugin.extras.TellrawUtils.ListComponent;
+import plugin.extras.TellrawUtils.RawTextComponent;
+import plugin.extras.TellrawUtils.SelectorComponent;
+import plugin.extras.TellrawUtils.TranslationComponent;
 
 public class CommandDropRate extends EvCommand{
 	final private DropHeads pl;
@@ -72,8 +74,8 @@ public class CommandDropRate extends EvCommand{
 			}
 			REQUIRED_WEAPONS = new TranslationComponent(
 					api.loadTranslationStr(CMD_TRANSLATE_PATH+"restrictions.required-weapons"),
-				requiredWeapons
-			);
+					requiredWeapons
+					);
 		}
 		else REQUIRED_WEAPONS = null;
 		ConfigurationSection specificToolMults = pl.getConfig().getConfigurationSection("specific-tool-multipliers");
