@@ -47,7 +47,8 @@ dependencies {
     compileOnly("com.arcaniax:HeadDatabase-API:1.3.2") // Import Head Database API.
     compileOnly("com.comphenix.protocol:ProtocolLib:5.1.0") // Import ProtocolLib API.
 
-    implementation(files("libs/EvLib-OG/build/libs/EvLib-OG-1.0.jar"))
+    compileOnly(project(":libs:EvLib-OG"))
+    compileOnly(project(":libs:Utilities-OG"))
 }
 
 tasks.withType<AbstractArchiveTask>().configureEach { // Ensure reproducible builds.

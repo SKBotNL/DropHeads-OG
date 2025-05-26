@@ -35,3 +35,5 @@ build/
 .project
 .classpath
 bin/
+
+.idea/
